@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1f3a" />
+  <meta name="description" content="ShopBook – Your one-stop E-commerce & Book Publishing Platform" />
+  <title>ShopBook – Shop & Publish</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Firebase Modular SDK v9 (compat for easier inline use) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+
+  <!-- ========================================================
+       OVERLAY – used by drawer & modals
+  ======================================================== -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ========================================================
+       SIDE DRAWER
+  ======================================================== -->
+  <aside class="drawer" id="drawer" role="navigation" aria-label="Side menu">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <span class="brand-icon">📚</span>
+        <span class="brand-name">ShopBook</span>
+      </div>
+      <button class="drawer-close" id="drawerClose" aria-label="Close menu">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- User info shown when logged in -->
+    <div class="drawer-user" id="drawerUser" style="display:none;">
+      <div class="drawer-avatar" id="drawerAvatar">U</div>
+      <div class="drawer-user-info">
+        <p class="drawer-user-name" id="drawerUserName">User Name</p>
+        <p class="drawer-user-email" id="drawerUserEmail">user@email.com</p>
+      </div>
+    </div>
+
+    <nav class="drawer-nav">
+      <a class="drawer-link active" data-section="home" href="#">
+        <span class="material-icons-round">home</span> Home
+      </a>
+      <a class="drawer-link" data-section="publish" href="#">
+        <span class="material-icons-round">menu_book</span> Publish a Book
+      </a>
+      <a class="drawer-link" data-section="profile" href="#">
+        <span class="material-icons-round">person</span> My Profile
+      </a>
+      <a class="drawer-link" data-section="orders" href="#">
+        <span class="material-icons-round">shopping_bag</span> My Orders
+      </a>
+    </nav>
+
+    <div class="drawer-footer">
+      <button class="drawer-logout-btn" id="drawerLogout" style="display:none;">
+        <span class="material-icons-round">logout</span> Logout
+      </button>
+      <button class="drawer-login-btn" id="drawerLoginBtn">
+        <span class="material-icons-round">login</span> Login / Sign Up
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================
+       STICKY HEADER
+  ======================================================== -->
+  <header class="app-header" id="appHeader">
+    <div class="header-inner">
+
+      <!-- Hamburger / Menu -->
+      <button class="header-menu-btn" id="menuBtn" aria-label="Open menu">
+        <span class="material-icons-round">menu</span>
+      </button>
+
+      <!-- Brand -->
+      <a class="header-brand" data-section="home" href="#">
+        <span class="header-brand-icon">📚</span>
+        <span class="header-brand-text">ShopBook</span>
+      </a>
+
+      <!-- Search Bar (desktop visible, mobile expands) -->
+      <div class="header-search-wrap" id="headerSearchWrap">
+        <span class="material-icons-round search-icon">search</span>
+        <input
+          type="text"
+          id="searchInput"
+          class="header-search-input"
+          placeholder="Search products, books..."
+          autocomplete="off"
+          aria-label="Search"
+        />
+        <button class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" style="display:none;">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <!-- Right actions -->
+      <div class="header-actions">
+        <button class="header-search-toggle" id="searchToggleBtn" aria-label="Toggle search">
+          <span class="material-icons-round">search</span>
+        </button>
+        <button class="header-cart-btn" id="cartBtn" aria-label="View cart">
+          <span class="material-icons-round">shopping_cart</span>
+          <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Search Bar (expanded state) -->
+    <div class="mobile-search-bar" id="mobileSearchBar">
+      <span class="material-icons-round">search</span>
+      <input
+        type="text"
+        id="mobileSearchInput"
+        class="mobile-search-input"
+        placeholder="Search products, books..."
+        autocomplete="off"
+      />
+      <button id="mobileSearchClose" aria-label="Close search">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       MAIN CONTENT AREA
+  ======================================================== -->
+  <main class="app-main" id="appMain">
+
+    <!-- ── SECTION: HOME ─────────────────────────────────── -->
+    <section class="section active" id="section-home">
+
+      <!-- Cashback banner -->
+      <div class="cashback-banner">
+        <span class="material-icons-round">local_offer</span>
+        <span>Order Now and Earn <strong>5% Cashback</strong> on every purchase!</span>
+      </div>
+
+      <!-- Hero carousel placeholder -->
+      <div class="hero-carousel" id="heroBanner">
+        <div class="hero-slide active" style="background: linear-gradient(135deg,#1a1f3a 0%,#f97316 100%);">
+          <div class="hero-text">
+            <h2>Best Deals on Books & More</h2>
+            <p>Discover thousands of products at unbeatable prices</p>
+            <button class="hero-cta">Shop Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category chips -->
+      <div class="category-strip" id="categoryStrip">
+        <button class="category-chip active" data-cat="all">All</button>
+        <button class="category-chip" data-cat="books">Books</button>
+        <button class="category-chip" data-cat="electronics">Electronics</button>
+        <button class="category-chip" data-cat="fashion">Fashion</button>
+        <button class="category-chip" data-cat="stationery">Stationery</button>
+      </div>
+
+      <!-- Section heading -->
+      <div class="section-heading">
+        <h3 class="section-title">Featured Products</h3>
+        <span class="section-subtitle">Updated daily</span>
+      </div>
+
+      <!-- Product grid -->
+      <div class="product-grid" id="productGrid">
+        <!-- Skeleton loaders shown before data loads -->
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+      </div>
+
+      <!-- No results state -->
+      <div class="empty-state" id="noProductsState" style="display:none;">
+        <span class="material-icons-round empty-icon">search_off</span>
+        <p>No products found. Try a different search.</p>
+      </div>
+
+    </section>
+
+    <!-- ── SECTION: PUBLISH ──────────────────────────────── -->
+    <section class="section" id="section-publish">
+
+      <div class="page-hero publish-hero">
+        <h2 class="page-hero-title">
+          <span class="material-icons-round">auto_stories</span>
+          Publish Your Book
+        </h2>
+        <p class="page-hero-sub">Share your story with the world. Fill in the details and we'll connect you via WhatsApp.</p>
+      </div>
+
+      <!-- Login warning for publish -->
+      <div class="auth-warning" id="publishAuthWarning" style="display:none;">
+        <span class="material-icons-round">warning</span>
+        <div>
+          <strong>Login Required!</strong>
+          <p>You must be logged in to publish a book. Please go to <em>Profile</em> and login first.</p>
+        </div>
+        <button class="warn-login-btn" data-section="profile">Login Now →</button>
+      </div>
+
+      <div class="publish-form-wrap" id="publishFormWrap">
+        <form class="publish-form" id="publishForm" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="bookTitle">
+              <span class="material-icons-round">title</span> Book Title *
+            </label>
+            <input type="text" id="bookTitle" class="form-input" placeholder="e.g., The Art of Coding" required />
+            <span class="form-error" id="bookTitleError"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookSubtitle">
+              <span class="material-icons-round">subtitles</span> Subtitle
+            </label>
+            <input type="text" id="bookSubtitle" class="form-input" placeholder="e.g., A beginner's journey" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons-round">category</span> Format *
+            </label>
+            <div class="radio-group">
+              <label class="radio-card">
+                <input type="radio" name="bookFormat" value="Paperback" checked />
+                <span class="radio-label">
+                  <span class="material-icons-round">menu_book</span>
+                  Paperback
+                </span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="bookFormat" value="E-book" />
+                <span class="radio-label">
+                  <span class="material-icons-round">tablet_android</span>
+                  E-book
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookSize">
+              <span class="material-icons-round">straighten</span> Book Size / Dimensions *
+            </label>
+            <select id="bookSize" class="form-input form-select" required>
+              <option value="">— Select Size —</option>
+              <option value="A4 (210 × 297 mm)">A4 (210 × 297 mm)</option>
+              <option value="A5 (148 × 210 mm)">A5 (148 × 210 mm)</option>
+              <option value="B5 (176 × 250 mm)">B5 (176 × 250 mm)</option>
+              <option value="6×9 inches">6×9 inches (Standard Novel)</option>
+              <option value="5×8 inches">5×8 inches (Pocket)</option>
+              <option value="Custom">Custom</option>
+            </select>
+            <span class="form-error" id="bookSizeError"></span>
+          </div>
+
+          <div class="form-group" id="customSizeGroup" style="display:none;">
+            <label class="form-label" for="bookCustomSize">Custom Size</label>
+            <input type="text" id="bookCustomSize" class="form-input" placeholder="e.g., 7×10 inches" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookPages">
+              <span class="material-icons-round">pages</span> Number of Pages *
+            </label>
+            <input type="number" id="bookPages" class="form-input" placeholder="e.g., 250" min="1" required />
+            <span class="form-error" id="bookPagesError"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookAuthor">
+              <span class="material-icons-round">person</span> Author Name *
+            </label>
+            <input type="text" id="bookAuthor" class="form-input" placeholder="Your full name" required />
+            <span class="form-error" id="bookAuthorError"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookDesc">
+              <span class="material-icons-round">description</span> Book Description
+            </label>
+            <textarea id="bookDesc" class="form-input form-textarea" rows="4" placeholder="Brief synopsis or description of your book..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookPDF">
+              <span class="material-icons-round">upload_file</span> Upload Book PDF *
+            </label>
+            <div class="file-upload-zone" id="fileUploadZone">
+              <input type="file" id="bookPDF" class="file-input" accept=".pdf" required />
+              <div class="file-upload-content" id="fileUploadContent">
+                <span class="material-icons-round file-upload-icon">cloud_upload</span>
+                <p class="file-upload-text">Click or drag & drop your PDF here</p>
+                <p class="file-upload-hint">Maximum file size: 50 MB</p>
+              </div>
+              <div class="file-selected-info" id="fileSelectedInfo" style="display:none;">
+                <span class="material-icons-round">picture_as_pdf</span>
+                <span id="fileSelectedName">file.pdf</span>
+                <button type="button" class="file-remove-btn" id="fileRemoveBtn">
+                  <span class="material-icons-round">close</span>
+                </button>
+              </div>
+            </div>
+            <span class="form-error" id="bookPDFError"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="publisherPhone">
+              <span class="material-icons-round">phone</span> Your WhatsApp Number *
+            </label>
+            <div class="phone-input-wrap">
+              <span class="phone-prefix">+91</span>
+              <input type="tel" id="publisherPhone" class="form-input phone-input" placeholder="9XXXXXXXXX" maxlength="10" required />
+            </div>
+            <span class="form-error" id="publisherPhoneError"></span>
+          </div>
+
+          <button type="submit" class="btn-primary publish-submit-btn" id="publishSubmitBtn">
+            <span class="material-icons-round">whatsapp</span>
+            Send via WhatsApp
+          </button>
+
+        </form>
+      </div>
+
+    </section>
+
+    <!-- ── SECTION: PROFILE ──────────────────────────────── -->
+    <section class="section" id="section-profile">
+
+      <!-- Cashback banner -->
+      <div class="cashback-banner">
+        <span class="material-icons-round">stars</span>
+        <span>Order Now and Earn <strong>5% Cashback</strong> on every purchase!</span>
+      </div>
+
+      <!-- ─ Not logged in state ─ -->
+      <div class="profile-login-prompt" id="profileLoginPrompt">
+        <div class="login-prompt-card">
+          <div class="login-prompt-icon">🔐</div>
+          <h3>Welcome to ShopBook</h3>
+          <p>Login or sign up to access your profile, orders, earnings, and more.</p>
+          <div class="login-methods">
+            <button class="btn-google-login" id="googleLoginBtn">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
+              Continue with Google
+            </button>
+            <div class="login-divider"><span>or</span></div>
+            <div class="otp-login-wrap">
+              <div class="phone-input-wrap">
+                <span class="phone-prefix">+91</span>
+                <input type="tel" id="loginPhoneInput" class="form-input phone-input" placeholder="Enter Mobile Number" maxlength="10" />
+              </div>
+              <button class="btn-primary" id="sendOtpBtn" style="width:100%;margin-top:10px;">
+                <span class="material-icons-round">sms</span> Send OTP
+              </button>
+            </div>
+            <!-- OTP input (hidden until sent) -->
+            <div class="otp-verify-wrap" id="otpVerifyWrap" style="display:none;">
+              <p class="otp-sent-msg">OTP sent to your number!</p>
+              <div class="otp-input-group" id="otpInputGroup">
+                <input type="number" class="otp-box" maxlength="1" data-index="0" />
+                <input type="number" class="otp-box" maxlength="1" data-index="1" />
+                <input type="number" class="otp-box" maxlength="1" data-index="2" />
+                <input type="number" class="otp-box" maxlength="1" data-index="3" />
+                <input type="number" class="otp-box" maxlength="1" data-index="4" />
+                <input type="number" class="otp-box" maxlength="1" data-index="5" />
+              </div>
+              <button class="btn-primary" id="verifyOtpBtn" style="width:100%;margin-top:12px;">
+                <span class="material-icons-round">verified</span> Verify OTP
+              </button>
+              <p class="resend-otp-text">
+                Didn't receive? <button class="resend-otp-btn" id="resendOtpBtn">Resend OTP</button>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- reCAPTCHA container for phone auth -->
+        <div id="recaptcha-container"></div>
+      </div>
+
+      <!-- ─ Logged in state ─ -->
+      <div class="profile-logged-in" id="profileLoggedIn" style="display:none;">
+
+        <!-- Profile card -->
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">U</div>
+          <div class="profile-info">
+            <h3 class="profile-name" id="profileName">User Name</h3>
+            <p class="profile-email" id="profileEmail">user@email.com</p>
+          </div>
+          <button class="btn-logout" id="logoutBtn">
+            <span class="material-icons-round">logout</span> Logout
+          </button>
+        </div>
+
+        <!-- Earnings card -->
+        <div class="earnings-card">
+          <div class="earnings-icon">💰</div>
+          <div class="earnings-info">
+            <p class="earnings-label">Total Cashback Earned</p>
+            <h2 class="earnings-amount" id="earningsAmount">₹0.00</h2>
+            <p class="earnings-sub">5% on every successful order</p>
+          </div>
+        </div>
+
+        <!-- Order Status Button -->
+        <div class="orders-section">
+          <div class="orders-section-header">
+            <h3><span class="material-icons-round">local_shipping</span> My Orders</h3>
+            <button class="btn-outline" id="viewOrdersBtn">
+              <span class="material-icons-round">visibility</span> View All
+            </button>
+          </div>
+          <div class="orders-list" id="profileOrdersList">
+            <div class="empty-orders">
+              <span class="material-icons-round">shopping_bag</span>
+              <p>No orders yet. Start shopping!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- UPI Withdrawal -->
+        <div class="withdrawal-card">
+          <h3 class="withdrawal-title">
+            <span class="material-icons-round">account_balance_wallet</span>
+            Withdraw Cashback
+          </h3>
+          <p class="withdrawal-sub">Enter your UPI ID to request a withdrawal. Our team will process it within 2–3 business days.</p>
+          <div class="withdrawal-form" id="withdrawalForm">
+            <div class="form-group">
+              <label class="form-label" for="upiId">UPI ID</label>
+              <input type="text" id="upiId" class="form-input" placeholder="yourname@upi" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="withdrawAmount">Amount (₹)</label>
+              <input type="number" id="withdrawAmount" class="form-input" placeholder="Enter amount" min="10" />
+            </div>
+            <button class="btn-primary" id="withdrawBtn" style="width:100%;">
+              <span class="material-icons-round">send</span> Request Withdrawal
+            </button>
+          </div>
+          <div class="withdrawal-success" id="withdrawalSuccess" style="display:none;">
+            <span class="material-icons-round">check_circle</span>
+            <p>Withdrawal request submitted! We'll process it soon.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: ORDERS ───────────────────────────────── -->
+    <section class="section" id="section-orders">
+      <div class="page-hero">
+        <h2 class="page-hero-title">
+          <span class="material-icons-round">shopping_bag</span> My Orders
+        </h2>
+      </div>
+
+      <!-- Auth warning for orders -->
+      <div class="auth-warning" id="ordersAuthWarning" style="display:none;">
+        <span class="material-icons-round">warning</span>
+        <div>
+          <strong>Login Required!</strong>
+          <p>Please login to view your orders.</p>
+        </div>
+        <button class="warn-login-btn" data-section="profile">Login Now →</button>
+      </div>
+
+      <div class="orders-container" id="ordersContainer" style="display:none;">
+        <div class="orders-full-list" id="ordersFullList">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading orders...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================
+       BOTTOM NAVIGATION (Footer)
+  ======================================================== -->
+  <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Bottom navigation">
+    <button class="bottom-nav-btn active" data-section="home" aria-label="Home">
+      <span class="material-icons-round">home</span>
+      <span class="bottom-nav-label">Home</span>
+    </button>
+    <button class="bottom-nav-btn" data-section="publish" aria-label="Publish">
+      <span class="material-icons-round">menu_book</span>
+      <span class="bottom-nav-label">Publish</span>
+    </button>
+    <button class="bottom-nav-btn" data-section="profile" aria-label="Profile">
+      <span class="material-icons-round">person</span>
+      <span class="bottom-nav-label">Profile</span>
+    </button>
+  </nav>
+
+  <!-- ========================================================
+       CART SIDEBAR / DRAWER
+  ======================================================== -->
+  <div class="cart-sidebar" id="cartSidebar" role="dialog" aria-label="Shopping cart" aria-modal="true">
+    <div class="cart-header">
+      <h3>
+        <span class="material-icons-round">shopping_cart</span>
+        My Cart
+        <span class="cart-count-text" id="cartCountText">(0 items)</span>
+      </h3>
+      <button class="cart-close-btn" id="cartCloseBtn" aria-label="Close cart">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div class="cart-body" id="cartBody">
+      <!-- Cart items injected here by JS -->
+      <div class="empty-cart" id="emptyCartMsg">
+        <span class="material-icons-round">remove_shopping_cart</span>
+        <p>Your cart is empty!</p>
+        <button class="btn-primary" onclick="switchSection('home'); closeCart();">Start Shopping</button>
+      </div>
+    </div>
+
+    <div class="cart-footer" id="cartFooter" style="display:none;">
+      <div class="cart-summary">
+        <div class="cart-summary-row">
+          <span>Subtotal</span>
+          <span id="cartSubtotal">₹0</span>
+        </div>
+        <div class="cart-summary-row">
+          <span>Discount</span>
+          <span class="discount-text" id="cartDiscount">-₹0</span>
+        </div>
+        <div class="cart-summary-row total-row">
+          <span>Total</span>
+          <span id="cartTotal">₹0</span>
+        </div>
+        <div class="cart-summary-row cashback-row">
+          <span>Cashback (5%)</span>
+          <span class="cashback-text" id="cartCashback">+₹0</span>
+        </div>
+      </div>
+
+      <!-- Auth warning inside cart -->
+      <div class="auth-warning cart-auth-warning" id="cartAuthWarning" style="display:none;">
+        <span class="material-icons-round">warning</span>
+        <div>
+          <strong>Login to Checkout!</strong>
+          <p>Go to Profile and login to place your order.</p>
+        </div>
+        <button class="warn-login-btn" data-section="profile" onclick="closeCart();">Login →</button>
+      </div>
+
+      <button class="btn-primary checkout-btn" id="checkoutBtn">
+        <span class="material-icons-round">payment</span>
+        Proceed to Checkout
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       ADDRESS MODAL
+  ======================================================== -->
+  <div class="modal" id="addressModal" role="dialog" aria-label="Delivery address" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><span class="material-icons-round">location_on</span> Delivery Address</h3>
+        <button class="modal-close" id="addressModalClose" aria-label="Close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-subtitle" id="addressModalSubtitle">Please enter your delivery address</p>
+        <form id="addressForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="addrName">Full Name *</label>
+            <input type="text" id="addrName" class="form-input" placeholder="Your full name" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addrPhone">Mobile Number *</label>
+            <input type="tel" id="addrPhone" class="form-input" placeholder="10-digit mobile number" maxlength="10" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addrStreet">House No., Street *</label>
+            <input type="text" id="addrStreet" class="form-input" placeholder="House No., Building, Street" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addrArea">Area / Locality *</label>
+            <input type="text" id="addrArea" class="form-input" placeholder="Colony, Area, Locality" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="addrCity">City *</label>
+              <input type="text" id="addrCity" class="form-input" placeholder="City" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="addrState">State *</label>
+              <input type="text" id="addrState" class="form-input" placeholder="State" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="addrPin">PIN Code *</label>
+              <input type="text" id="addrPin" class="form-input" placeholder="6-digit PIN" maxlength="6" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="addrLandmark">Landmark</label>
+              <input type="text" id="addrLandmark" class="form-input" placeholder="Optional landmark" />
+            </div>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="saveAddressCheck" checked />
+            <span class="checkbox-text">Save this address for future orders</span>
+          </label>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="addressModalCancel">Cancel</button>
+        <button class="btn-primary" id="addressConfirmBtn">
+          <span class="material-icons-round">payment</span> Continue to Pay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       ORDER STATUS MODAL
+  ======================================================== -->
+  <div class="modal" id="orderStatusModal" role="dialog" aria-label="Order status" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><span class="material-icons-round">local_shipping</span> Order Status</h3>
+        <button class="modal-close" id="orderStatusModalClose" aria-label="Close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="order-id-label">Order ID: <span id="statusOrderId" class="order-id-value">—</span></p>
+
+        <!-- 4-step progress tracker -->
+        <div class="order-tracker">
+          <div class="tracker-step" id="step-confirmed">
+            <div class="tracker-dot">
+              <span class="material-icons-round">check_circle</span>
+            </div>
+            <div class="tracker-connector"></div>
+            <p class="tracker-label">Confirmed</p>
+          </div>
+          <div class="tracker-step" id="step-shipped">
+            <div class="tracker-dot">
+              <span class="material-icons-round">local_shipping</span>
+            </div>
+            <div class="tracker-connector"></div>
+            <p class="tracker-label">Shipped</p>
+          </div>
+          <div class="tracker-step" id="step-out">
+            <div class="tracker-dot">
+              <span class="material-icons-round">delivery_dining</span>
+            </div>
+            <div class="tracker-connector"></div>
+            <p class="tracker-label">Out for Delivery</p>
+          </div>
+          <div class="tracker-step" id="step-delivered">
+            <div class="tracker-dot">
+              <span class="material-icons-round">home</span>
+            </div>
+            <p class="tracker-label">Delivered</p>
+          </div>
+        </div>
+
+        <div class="order-details-mini" id="orderDetailsMini">
+          <!-- Items listed here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="orderStatusClose2">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       PRODUCT QUICK VIEW MODAL
+  ======================================================== -->
+  <div class="modal" id="productModal" role="dialog" aria-label="Product details" aria-modal="true">
+    <div class="modal-content product-modal-content">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Product Details</h3>
+        <button class="modal-close" id="productModalClose" aria-label="Close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="modal-body product-modal-body">
+        <div class="product-modal-img-wrap">
+          <img id="productModalImg" src="" alt="Product" class="product-modal-img" />
+        </div>
+        <div class="product-modal-info">
+          <h2 id="productModalName"></h2>
+          <div class="product-modal-prices">
+            <span class="modal-price" id="productModalPrice"></span>
+            <span class="modal-original-price" id="productModalOriginalPrice"></span>
+            <span class="modal-discount-badge" id="productModalDiscount"></span>
+          </div>
+          <p class="product-modal-desc" id="productModalDesc"></p>
+          <div class="product-modal-actions">
+            <button class="btn-outline" id="productModalAddCart">
+              <span class="material-icons-round">add_shopping_cart</span> Add to Cart
+            </button>
+            <button class="btn-primary" id="productModalBuyNow">
+              <span class="material-icons-round">flash_on</span> Buy Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       TOAST NOTIFICATIONS
+  ======================================================== -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- ========================================================
+       PAYMENT SUCCESS OVERLAY
+  ======================================================== -->
+  <div class="success-overlay" id="successOverlay" style="display:none;">
+    <div class="success-card">
+      <div class="success-animation">
+        <div class="success-checkmark">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+      </div>
+      <h2 class="success-title">Order Placed!</h2>
+      <p class="success-msg">Your payment was successful. Thank you for shopping with ShopBook!</p>
+      <div class="success-payment-id">
+        <span class="material-icons-round">receipt</span>
+        Payment ID: <span id="successPaymentId">—</span>
+      </div>
+      <div class="success-cashback-earned" id="successCashback">
+        <span class="material-icons-round">stars</span>
+        You earned <strong id="successCashbackAmt">₹0</strong> cashback!
+      </div>
+      <button class="btn-primary" id="successDoneBtn">
+        <span class="material-icons-round">home</span> Continue Shopping
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       LOADING OVERLAY
+  ======================================================== -->
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p id="loadingMsg">Processing...</p>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       SCRIPTS
+  ======================================================== -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
