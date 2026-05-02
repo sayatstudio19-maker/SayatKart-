@@ -7,13 +7,13 @@
 //  FIREBASE CONFIG  ✅ আসল values বসানো হয়েছে
 // ================================================================
 const firebaseConfig = {
-  apiKey:            "AIzaSyDgJGxWxWGxszN4mz261wWKoB8kK_gxCIU",
-  authDomain:        "sayat-kart.firebaseapp.com",
-  projectId:         "sayat-kart",
-  storageBucket:     "sayat-kart.firebasestorage.app",
-  messagingSenderId: "721186261827",
-  appId:             "1:721186261827:web:6aac4357fcadf05f703df6",
-  measurementId:     "G-FKZZJBMK81"
+  apiKey:            "AIzaSyD2uydEiOBzxV5D7LFY2EWE6TiqHKCBCeg",
+  authDomain:        "sayatstudio-191251251.firebaseapp.com",
+  projectId:         "sayatstudio-191251251",
+  storageBucket:     "sayatstudio-191251251.firebasestorage.app",
+  messagingSenderId: "846650166489",
+  appId:             "1:846650166489:web:e352ea6ce43b902b6102c8",
+  measurementId:     "G-9DL5CQ4VXZ"
 };
 
 // ================================================================
