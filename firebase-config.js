@@ -22,14 +22,15 @@
 //  ★  STEP 1 – তোমার Firebase Project Config এখানে বসাও
 // ================================================================
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",               // 🔴 Replace
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId:             "YOUR_APP_ID",
-  measurementId:     "YOUR_MEASUREMENT_ID",        // optional
-};
+  apiKey:            "AIzaSyDgJGxWxWGxszN4mz261wWKoB8kK_gxCIU",               // 🔴 Replace
+  authDomain:        "sayat-kart.firebaseapp.com",
+  projectId:         "sayat-kart",
+  storageBucket:     "sayat-kart.firebasestorage.app",
+  messagingSenderId: "721186261827",
+  appId:             "1:721186261827:web:6aac4357fcadf05f703df6",",
+  measurementId:     "G-FKZZJBMK81"
+};",        // optional
+
 
 // ================================================================
 //  ★  STEP 2 – Razorpay Key ID
@@ -51,16 +52,16 @@ const RAZORPAY_KEY_ID = "rzp_test_XXXXXXXXXXXXXXXX";  // 🔴 Replace
 //               APP_CONFIG.razorpay.image   → logo URL
 // ================================================================
 const APP_CONFIG = {
-  appName:         "ShopBook",
+  appName:         "SayatKart",
   currency:        "INR",
   currencySymbol:  "₹",
   cashbackPercent: 5,                      // প্রতিটি order-এ 5% cashback
   whatsappNumber:  "919734398907",         // admin WhatsApp (publishing)
-  supportEmail:    "support@shopbook.in",
+  supportEmail:    "sayatstudio19@gmail.com",
 
   razorpay: {
     keyId:       RAZORPAY_KEY_ID,          // app.js: APP_CONFIG?.razorpay?.keyId
-    name:        "ShopBook",
+    name:        "SayatKart",
     description: "Order Payment",
     image:       "https://i.imgur.com/placeholder-logo.png", // 🔴 Replace
     currency:    "INR",
